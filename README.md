@@ -46,7 +46,7 @@ sys     0m0.062s
 
 ###Lisp (Common Lisp):
 ```
-real	0m0.156s
-user	0m0.135s
-sys		0m0.016s
+real    0m0.156s
+user    0m0.135s
+sys     0m0.016s
 ```
