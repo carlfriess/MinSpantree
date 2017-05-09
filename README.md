@@ -50,3 +50,10 @@ real    0m0.156s
 user    0m0.135s
 sys     0m0.016s
 ```
+
+###Haskell:
+```
+real    0m1.721s
+user    0m1.689s
+sys     0m0.021s
+```
