@@ -30,6 +30,13 @@ user    0m0.170s
 sys     0m0.023s
 ```
 
+###Objective-C:
+```
+real    0m0.240s
+user    0m0.227s
+sys     0m0.007s
+```
+
 ###Swift:
 ```
 real    0m0.533s
