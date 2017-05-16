@@ -1,54 +1,60 @@
 import System.IO
 import Data.Maybe
-import Data.Equivalence.Monad
-import Data.Graph as G
+import qualified Data.IntMap.Strict as IM
 import Data.List as L
 import Data.Map as M
-import Control.Monad (filterM)
 import Data.Ord (comparing)
 
--- make the list into a list of tuple of a tuple and an integer
-triplets f [] = f
-triplets f (x:y:z:xs) = triplets (f ++ [((x, y), z)]) xs
+data Edge = MyEdge
+ { edgeFrom :: Int
+ , edgeTo :: Int
+ , edgeCost :: Int
+ } deriving (Show, Eq)
 
-run = runEquivM (const ()) (const $ const ())
+instance Ord Edge where
+    compare = comparing edgeCost
 
--- kruskal algorithm: sort the list for costs/weights and filter with a union-find
-kruskal weight graph = run $
-    filterM go (sortBy (comparing weight) theEdges)
-     where
-       theEdges = G.edges graph
-       go (u,v) = do
-         eq <- equivalent u v
-         if eq then return False else
-          equate u v >> return True
+makeEdgeList f [] = f
+makeEdgeList f (x:y:z:xs) = makeEdgeList (f ++ [MyEdge x y z]) xs
 
+-- create Keys that represent values and that are their parents
+makeSets n = IM.fromList [(key, val) | key <- [1..n], val <- [1..n], key == val]
+-- replace the key in the set with a new value
+replace key new sets = IM.adjust (\ a ->  new) key sets
+-- replace the Parent
+replaceParent u v set = replace (getParent u set) (getParent v set) set
 
--- lookup costs of edge in Map
-fromL xs = fromJust . flip M.lookup (M.fromList xs) -- function to value (cost) when providing key (edge)
+getParent v sets
+    | parent == v = v
+    | otherwise = getParent parent sets
+    where
+        parent = fromJust $ IM.lookup v sets
 
--- n is the number of testcases
-krus f n = do
-    if n > 0
-        then do
-            let numEdges = (head . tail) f
-            -- k = numVertices, numEdges, and then edges in format of: vert1, vert2, costs
-            -- k equals the number of integers related to our testcase (needed to take away at the end)
-            let k = 2+3*numEdges
-            -- make triplets out of the edges
-            let edges = triplets [] $ drop 2 . take k $ f
-            -- testWeights is the lookup function for
-            let testWeights = fromL edges
-            -- build a graph out of the edges (which we have to convert back from the triplets)
-            let testGraph = G.buildG (1, numEdges - 1) $ L.foldr ((:) . fst) [] edges
-            -- sum over the costs and print it
-            print (sum $ L.map testWeights $ kruskal testWeights testGraph)
-            -- drop all edges from this testcase from the list
-            krus (drop k f) (n - 1)
-        else return ()
+diffParent u v sets = getParent u sets /= getParent v sets
+
+kruskal' [] sets costs = costs
+kruskal' edges sets costs
+    | diffParent u v sets  = kruskal' (tail edges) (replaceParent u v sets) (costs + c)
+    | otherwise            = kruskal' (tail edges) sets costs
+    where
+        u = edgeFrom (head edges)
+        v = edgeTo   (head edges)
+        c = edgeCost (head edges)
+
+kruskal f n
+    | n > 0 = do
+        print $ kruskal' edges sets 0
+        kruskal (drop k f) (n - 1)
+    | otherwise = print "Done"
+    where
+        numVert  = head f
+        numEdges = (head . tail) f
+        k = 2+3*numEdges
+        edges = sort $ makeEdgeList [] $ drop 2 . take k $ f
+        sets = makeSets numVert
 
 main = do
     file <- readFile "public.txt"
     let contents = L.map read $ words file :: [Int] -- parse file into list of integers
-    krus (tail contents) (head contents) -- tail is list of edeges, head is number of testcases
+    kruskal (tail contents) (head contents) -- tail is list of edeges, head is number of testcases
     return ()
