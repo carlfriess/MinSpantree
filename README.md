@@ -53,7 +53,7 @@ sys     0m0.016s
 
 ###Haskell:
 ```
-real    0m1.721s
-user    0m1.689s
+real	0m1.634s
+user    0m1.600s
 sys     0m0.021s
 ```
